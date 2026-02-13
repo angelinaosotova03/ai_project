@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интеллектуальный расчет добычи газа</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient-start: #1a3a6c;
+            --primary-gradient-end: #2a9d8f;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --text-dark: #1a2530;
+            --text-light: #5a6b7c;
+            --border-radius: 20px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            --shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.2);
+            --accent-color: #2a9d8f;
+            --accent-gradient: linear-gradient(135deg, #2a9d8f 0%, #1d6f63 100%);
+            --error-color: #e63946;
+            --success-color: #2a9d8f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 40%),
+                        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding: 1.5rem 0;
+        }
+
+        .logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 1.2rem;
+        }
+
+        .logo-icon {
+            font-size: 2.8rem;
+            background: rgba(255, 255, 255, 0.2);
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1.2;
+            background: linear-gradient(to right, white, #e6f7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.92);
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-gradient-start);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-title svg {
+            width: 28px;
+            height: 28px;
+            color: var(--accent-color);
+        }
+
+        .upload-area {
+            border: 3px dashed rgba(42, 157, 143, 0.3);
+            border-radius: var(--border-radius);
+            padding: 3rem 2rem;
+            text-align: center;
+            background: rgba(230, 247, 245, 0.6);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent-color);
+            background: rgba(230, 247, 245, 0.8);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: var(--accent-color);
+            margin-bottom: 1.2rem;
+            transition: transform 0.4s ease;
+        }
+
+        .upload-area:hover .upload-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .upload-text h3 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: var(--primary-gradient-start);
+            margin-bottom: 0.8rem;
+        }
+
+        .upload-text p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            margin-bottom: 1.2rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 1rem 2.4rem;
+            font-size: 1.15rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(42, 157, 143, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(42, 157, 143, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(26, 58, 108, 0.1);
+            color: var(--primary-gradient-start);
+            box-shadow: 0 4px 10px rgba(26, 58, 108, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(26, 58, 108, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(26, 58, 108, 0.2);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2a9d8f 0%, #1a6b5f 100%);
+            padding: 1.2rem 2.8rem;
+            font-size: 1.25rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.8rem;
+            margin-top: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem 1.4rem;
+            border: 2px solid rgba(26, 58, 108, 0.15);
+            border-radius: 14px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.2);
+        }
+
+        .data-table-container {
+            overflow-x: auto;
+            margin-top: 1.8rem;
+            border-radius: 16px;
+            border: 1px solid rgba(26, 58, 108, 0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+
+        .data-table th {
+            background: var(--primary-gradient-start);
+            color: white;
+            padding: 1.1rem 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid rgba(26, 58, 108, 0.08);
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(42, 157, 143, 0.04);
+        }
+
+        .alert {
+            padding: 1.2rem 1.8rem;
+            border-radius: 16px;
+            margin-bottom: 1.8rem;
+            display: none;
+            font-size: 1.05rem;
+            line-height: 1.5;
+        }
+
+        .alert.show {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert-info {
+            background: rgba(230, 247, 245, 0.9);
+            border-left: 4px solid var(--accent-color);
+            color: #1a5249;
+        }
+
+        .alert-error {
+            background: rgba(248, 215, 218, 0.9);
+            border-left: 4px solid var(--error-color);
+            color: #911a24;
+        }
+
+        .alert-success {
+            background: rgba(230, 247, 245, 0.95);
+            border-left: 4px solid var(--success-color);
+            color: #1a5249;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 1.5rem;
+            margin: 1.8rem 0;
+        }
+
+        .progress-container {
+            margin-top: 1.5rem;
+            display: none;
+        }
+
+        .progress-container.show {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(26, 58, 108, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 0.8rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-gradient);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 1.8rem 1.2rem;
+            border-radius: 18px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2.1rem;
+            font-weight: 800;
+            color: var(--primary-gradient-start);
+            margin: 0.6rem 0 0.4rem;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 1.05rem;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            max-width: 700px;
+            line-height: 1.6;
+        }
+
+        .footer-logo {
+            font-weight: 700;
+            font-size: 1.3rem;
+            margin-top: 0.5rem;
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1.5rem;
+            }
+            
+            .header {
+                padding: 1rem 0;
+            }
+            
+            h1 {
+                font-size: 2.3rem;
+            }
+            
+            .subtitle {
+                font-size: 1.15rem;
+            }
+            
+            .card {
+                padding: 1.8rem;
+            }
+            
+            .card-title {
+                font-size: 1.6rem;
+            }
+            
+            .upload-area {
+                padding: 2.2rem 1.5rem;
+            }
+            
+            .upload-icon {
+                font-size: 3.2rem;
+            }
+            
+            .upload-text h3 {
+                font-size: 1.5rem;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+                padding: 1.1rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .stat-value {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .logo-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 2.3rem;
+            }
+            
+            .upload-area {
+                padding: 2rem 1rem;
+            }
+            
+            .card {
+                padding: 1.6rem;
+            }
+            
+            .stat-value {
+                font-size: 1.6rem;
+            }
+            
+            .stat-label {
+                font-size: 0.95rem;
+            }
+            
+            .btn {
+                font-size: 1.1rem;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">⛽</div>
+            </div>
+            <h1>Интеллектуальный расчет добычи газа</h1>
+            <p class="subtitle">Прогнозирование добычи на основе машинного обучения и анализа исторических данных скважин</p>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="card">
+            <h2 class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                Загрузите данные скважины
+            </h2>
+
+            <div class="upload-area" id="dropZone">
+                <div class="upload-icon">📊</div>
+                <div class="upload-text">
+                    <h3>Перетащите файл сюда</h3>
+                    <p>Поддерживаются файлы в формате CSV с историей добычи</p>
+                    <p style="font-size: 0.95rem; color: var(--text-light); margin-top: 0.5rem;">
+                        Максимальный размер: 10 МБ
+                    </p>
+                </div>
+                <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                <button class="btn" onclick="document.getElementById('fileInput').click()">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Выбрать файл
+                </button>
+            </div>
+
+            <div class="alert alert-info show" id="fileInfoAlert">
+                <strong>ℹ️ Формат данных:</strong> Файл должен содержать колонки: 
+                <code>Lease</code>, <code>Time</code>, <code>Gas_Volume</code>, <code>Oil_Volume</code>, <code>Water_Volume</code>
+                и давления (<code>Casing Pressure</code>, <code>Tubing Pressure</code>)
+            </div>
+
+            <div class="progress-container" id="progressContainer">
+                <p>Обработка файла...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Preview Section -->
+        <div class="card" id="previewCard" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Предпросмотр данных
+                </h2>
+                <button class="btn btn-secondary" onclick="clearFile()" style="padding: 0.7rem 1.6rem; font-size: 0.95rem;">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Очистить
+                </button>
+            </div>
+
+            <p style="color: var(--text-light); margin-bottom: 1.5rem; font-size: 1.05rem;">
+                Загружено <span id="rowCount">0</span> строк данных для анализа
+            </p>
+
+            <div class="data-table-container">
+                <table class="data-table" id="dataTable">
+                    <thead>
+                        <tr id="tableHeader"></tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Forecast Parameters Section -->
+        <div class="card" id="forecastCard" style="display: none;">
+            <h2 class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Параметры прогноза
+            </h2>
+
+            <form id="forecastForm">
+                <div class="form-group">
+                    <label for="wellName">Название скважины</label>
+                    <input type="text" id="wellName" class="form-control" placeholder="Например: LORIKEET" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="forecastDays">Горизонт прогноза (дней)</label>
+                        <input type="number" id="forecastDays" class="form-control" min="7" max="90" value="30" required>
+                        <p style="color: var(--text-light); font-size: 0.95rem; margin-top: 0.5rem;">
+                            Рекомендуется: 7-30 дней для максимальной точности прогноза
+                        </p>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success" id="submitBtn" style="width: 100%; margin-top: 1.2rem;">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    Сгенерировать прогноз добычи
+                </button>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <!-- Results Section -->
+        <div class="card" id="resultsCard" style="display: none;">
+            <h2 class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                Результаты прогноза
+            </h2>
+
+            <div class="alert alert-success show">
+                ✅ Прогноз успешно сгенерирован моделью машинного обучения (sklearn)
+            </div>
+
+            <div class="result-stats">
+                <div class="stat-box">
+                    <div class="stat-label">Скважина</div>
+                    <div class="stat-value" id="resultWell">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Горизонт</div>
+                    <div class="stat-value" id="resultDays">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Средняя добыча</div>
+                    <div class="stat-value" id="resultAvg">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Суммарный объём</div>
+                    <div class="stat-value" id="resultTotal">-</div>
+                </div>
+            </div>
+
+            <!-- Графики -->
+            <div style="margin: 2.5rem 0;">
+                <h3 style="color: var(--primary-gradient-start); font-size: 1.6rem; margin-bottom: 1.5rem; font-weight: 700; text-align: center;">
+                    📊 Визуализация прогноза
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 1.8rem; margin-bottom: 2rem;">
+                    <div class="card" style="padding: 1.5rem; background: white; box-shadow: 0 6px 20px rgba(0,0,0,0.08);">
+                        <h4 style="text-align: center; color: var(--primary-gradient-start); margin-bottom: 1rem; font-weight: 600;">
+                            История добычи и прогноз
+                        </h4>
+                        <div style="text-align: center;">
+                            <img id="chart1" src="" alt="График добычи" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        </div>
+                    </div>
+                    <div class="card" style="padding: 1.5rem; background: white; box-shadow: 0 6px 20px rgba(0,0,0,0.08);">
+                        <h4 style="text-align: center; color: var(--primary-gradient-start); margin-bottom: 1rem; font-weight: 600;">
+                            Тренд и накопленный объём
+                        </h4>
+                        <div style="text-align: center;">
+                            <img id="chart2" src="" alt="Тренд добычи" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="padding: 1.8rem; background: white; box-shadow: 0 6px 20px rgba(0,0,0,0.08);">
+                    <h4 style="text-align: center; color: var(--primary-gradient-start); margin-bottom: 1.2rem; font-weight: 600; font-size: 1.4rem;">
+                        Важность признаков (sklearn)
+                    </h4>
+                    <p style="text-align: center; color: var(--text-light); margin-bottom: 1.5rem; font-size: 1.05rem;">
+                        Какие факторы больше всего влияют на прогноз добычи газа
+                    </p>
+                    <div style="text-align: center;">
+                        <img id="chart3" src="" alt="Важность признаков" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(230, 247, 245, 0.5); padding: 1.8rem; border-radius: 18px; margin-top: 2rem;">
+                <h3 style="color: var(--primary-gradient-start); font-size: 1.4rem; margin-bottom: 1.2rem; font-weight: 600;">
+                    📋 Сводка прогноза
+                </h3>
+                <div id="summaryContent" style="text-align: left; line-height: 1.7; color: var(--text-dark); font-size: 1.05rem;">
+                    <!-- Заполняется динамически -->
+                </div>
+            </div>
+
+            <button class="btn btn-success" onclick="downloadResults()" style="width: 100%; margin: 2rem 0 1.5rem; padding: 1.3rem;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Скачать результаты прогноза (CSV)
+            </button>
+
+            <button class="btn btn-secondary" onclick="location.reload()" style="width: 100%; padding: 1rem; font-size: 1.05rem;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Новый расчёт
+            </button>
+        </div>
+
+        <!-- Error Alert -->
+        <div class="alert alert-error" id="errorAlert"></div>
+
+        <div class="footer">
+            <div class="footer-logo">СЦ-24 | Осотова Ангелина Гаврииловна</div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let csvData = null;
+        let fileName = '';
+        let forecastResults = null;
+        let resultStats = null;
+
+        // DOM Elements
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfoAlert = document.getElementById('fileInfoAlert');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const previewCard = document.getElementById('previewCard');
+        const forecastCard = document.getElementById('forecastCard');
+        const resultsCard = document.getElementById('resultsCard');
+        const errorAlert = document.getElementById('errorAlert');
+        const tableHeader = document.getElementById('tableHeader');
+        const tableBody = document.getElementById('tableBody');
+        const rowCount = document.getElementById('rowCount');
+        const wellNameInput = document.getElementById('wellName');
+
+        // File upload handlers
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#2a9d8f';
+            dropZone.style.background = 'rgba(230, 247, 245, 0.85)';
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = 'rgba(42, 157, 143, 0.3)';
+            dropZone.style.background = 'rgba(230, 247, 245, 0.6)';
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'rgba(42, 157, 143, 0.3)';
+            dropZone.style.background = 'rgba(230, 247, 245, 0.6)';
+            
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            // Validate file
+            if (!file.name.endsWith('.csv')) {
+                showError('Пожалуйста, загрузите файл в формате CSV');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) { // 10 MB
+                showError('Файл слишком большой. Максимальный размер: 10 МБ');
+                return;
+            }
+
+            fileName = file.name;
+            fileInfoAlert.innerHTML = `<strong>✅ Файл загружен:</strong> ${fileName}`;
+
+            // Show progress
+            progressContainer.classList.add('show');
+            progressFill.style.width = '30%';
+
+            // Read file
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                progressFill.style.width = '60%';
+                setTimeout(() => {
+                    parseCSV(e.target.result);
+                    progressFill.style.width = '100%';
+                    setTimeout(() => {
+                        progressContainer.classList.remove('show');
+                        progressFill.style.width = '0%';
+                    }, 300);
+                }, 300);
+            };
+            reader.onerror = function() {
+                showError('Ошибка чтения файла');
+                progressContainer.classList.remove('show');
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(csvText) {
+            try {
+                const lines = csvText.trim().split('\n');
+                if (lines.length < 2) {
+                    throw new Error('Файл пустой или содержит недостаточно данных');
+                }
+
+                // Parse headers
+                const headers = lines[0].split(',').map(h => h.trim());
+                
+                // Parse data rows
+                const data = [];
+                for (let i = 1; i < lines.length && i <= 100; i++) { // Limit to 100 rows for preview
+                    const values = lines[i].split(',').map(v => v.trim());
+                    if (values.length === headers.length) {
+                        const row = {};
+                        headers.forEach((header, idx) => {
+                            row[header] = values[idx];
+                        });
+                        data.push(row);
+                    }
+                }
+
+                csvData = {
+                    headers: headers,
+                    data: data,
+                    totalRows: lines.length - 1
+                };
+
+                // Display preview
+                showPreview();
+                enableForecastForm();
+
+            } catch (error) {
+                showError(`Ошибка обработки CSV: ${error.message}`);
+            }
+        }
+
+        function showPreview() {
+            // Clear previous content
+            tableHeader.innerHTML = '';
+            tableBody.innerHTML = '';
+
+            // Add headers
+            csvData.headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header.length > 20 ? header.substring(0, 17) + '...' : header;
+                tableHeader.appendChild(th);
+            });
+
+            // Add data rows (max 10 for preview)
+            const previewData = csvData.data.slice(0, 10);
+            previewData.forEach(row => {
+                const tr = document.createElement('tr');
+                csvData.headers.forEach(header => {
+                    const td = document.createElement('td');
+                    td.textContent = row[header] ? (row[header].length > 15 ? row[header].substring(0, 12) + '...' : row[header]) : '';
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
+            });
+
+            // Update row count
+            rowCount.textContent = csvData.totalRows;
+
+            // Show preview card
+            previewCard.style.display = 'block';
+        }
+
+        function enableForecastForm() {
+            // Auto-fill well name if possible
+            if (csvData.data.length > 0 && csvData.headers.includes('Lease')) {
+                const firstWell = csvData.data[0]['Lease'];
+                if (firstWell) {
+                    wellNameInput.value = firstWell;
+                }
+            }
+
+            // Show forecast form
+            forecastCard.style.display = 'block';
+        }
+
+        function clearFile() {
+            csvData = null;
+            fileName = '';
+            fileInput.value = '';
+            previewCard.style.display = 'none';
+            forecastCard.style.display = 'none';
+            resultsCard.style.display = 'none';
+            errorAlert.style.display = 'none';
+            fileInfoAlert.innerHTML = `<strong>ℹ️ Формат данных:</strong> Файл должен содержать колонки: 
+                <code>Lease</code>, <code>Time</code>, <code>Gas_Volume</code>, <code>Oil_Volume</code>, <code>Water_Volume</code>
+                и давления (<code>Casing Pressure</code>, <code>Tubing Pressure</code>)`;
+        }
+
+        function showError(message) {
+            errorAlert.textContent = message;
+            errorAlert.classList.add('show');
+            setTimeout(() => {
+                errorAlert.classList.remove('show');
+            }, 6000);
+        }
+
+        // Form submission - GENERATE FORECAST
+        document.getElementById('forecastForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Validate form
+            const wellName = document.getElementById('wellName').value.trim();
+            const forecastDays = parseInt(document.getElementById('forecastDays').value);
+
+            if (!wellName) {
+                showError('Пожалуйста, укажите название скважины');
+                return;
+            }
+
+            if (forecastDays < 7 || forecastDays > 90) {
+                showError('Горизонт прогноза должен быть от 7 до 90 дней');
+                return;
+            }
+
+            // Generate forecast through ML model
+            generateForecast(wellName, forecastDays);
+        });
+
+        function generateForecast(wellName, forecastDays) {
+            // Show loading
+            forecastCard.style.display = 'none';
+            resultsCard.style.display = 'none';
+            
+            const loadingAlert = document.createElement('div');
+            loadingAlert.className = 'alert alert-info show';
+            loadingAlert.innerHTML = '<strong>🧠 Модель генерирует прогноз...</strong> Используем обученную модель машинного обучения';
+            document.querySelector('.container').insertBefore(loadingAlert, forecastCard);
+
+            // Prepare data for backend
+            const requestData = {
+                wellName: wellName,
+                forecastDays: forecastDays,
+                csvData: csvData
+            };
+
+            // Send to backend
+            fetch('/api/forecast', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                loadingAlert.remove();
+                
+                if (data.success && data.stats) {
+                    // Save forecast data for download
+                    forecastResults = data.stats.forecast_data || [];
+                    resultStats = data.stats;
+                    
+                    // Show results
+                    showResults(data.stats);
+                } else {
+                    showError(data.message || 'Неизвестная ошибка генерации прогноза');
+                }
+            })
+            .catch(error => {
+                loadingAlert.remove();
+                console.error('Ошибка прогноза:', error);
+                showError('Ошибка сервера: ' + error.message);
+            });
+        }
+
+        function showResults(stats) {
+            // Hide previous cards
+            previewCard.style.display = 'none';
+            forecastCard.style.display = 'none';
+
+            // Extract data with fallback for both snake_case and camelCase
+            const well = stats.well_name || stats.wellName || '-';
+            const days = stats.forecast_days || stats.forecastDays || 0;
+            const avg = stats.avg_production || stats.avgProduction || 0;
+            const total = stats.total_volume || stats.totalVolume || 0;
+
+            // Update stats
+            document.getElementById('resultWell').textContent = well;
+            document.getElementById('resultDays').textContent = `${days} дней`;
+            document.getElementById('resultAvg').textContent = `${parseFloat(avg).toFixed(4)} MMscf/день`;
+            document.getElementById('resultTotal').textContent = `${parseFloat(total).toFixed(2)} MMscf`;
+
+            // Build summary
+            const summary = `
+                <p><strong>Скважина:</strong> ${well}</p>
+                <p><strong>Горизонт прогноза:</strong> ${days} дней</p>
+                <p><strong>Средняя прогнозируемая добыча:</strong> ${parseFloat(avg).toFixed(4)} MMscf/день</p>
+                <p><strong>Суммарный объём за период:</strong> ${parseFloat(total).toFixed(2)} MMscf (${(parseFloat(total) * 28.3168).toFixed(0)} тыс. м³)</p>
+                <p><strong>Исходный файл:</strong> ${fileName}</p>
+                <p><strong>Строк данных:</strong> ${csvData ? csvData.totalRows : 0}</p>
+                <p style="color: #1a5249; font-size: 0.95rem; margin-top: 1rem; font-style: italic;">
+                    💡 Прогноз сгенерирован обученной моделью машинного обучения на основе истории добычи скважины
+                </p>
+            `;
+            document.getElementById('summaryContent').innerHTML = summary;
+
+            // Show results
+            resultsCard.style.display = 'block';
+        }
+
+        function downloadResults() {
+            if (!forecastResults || forecastResults.length === 0) {
+                showError('Нет данных для скачивания. Сначала сгенерируйте прогноз.');
+                return;
+            }
+
+            // Create CSV content
+            let csvContent = 'День,Добыча газа (MMscf),Добыча газа (тыс. м³)\n';
+            forecastResults.forEach(row => {
+                const day = row.day !== undefined ? row.day : (row.День || 0);
+                const gas = row.gas !== undefined ? row.gas : (row['Добыча газа (MMscf)'] || 0);
+                const gas_m3 = row.gas_m3 !== undefined ? row.gas_m3 : (row['Добыча газа (тыс. м³)'] || (gas * 28.3168));
+                
+                csvContent += `${day},${parseFloat(gas).toFixed(4)},${parseFloat(gas_m3).toFixed(1)}\n`;
+            });
+
+            // Create download link
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `forecast_${resultStats?.well_name || resultStats?.wellName || 'well'}_${resultStats?.forecast_days || resultStats?.forecastDays || 30}days_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Show success message
+            const successMsg = document.createElement('div');
+            successMsg.className = 'alert alert-success show';
+            successMsg.innerHTML = '<strong>✅ Успешно!</strong> Файл с прогнозом добычи скачан';
+            document.querySelector('.container').insertBefore(successMsg, resultsCard);
+            
+            setTimeout(() => {
+                successMsg.remove();
+            }, 4000);
+        }
+
+        // Initialize
+        console.log('Интеллектуальный расчет добычи газа | Газпромнефть');
+        console.log('Интерфейс готов к работе');
+    </script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #0f172a; /* задаём фон на уровне body, чтобы не было белых краёв */
+}
+
+/*Authorization form*/
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent; /* фон берётся от body */
+}
+
+/* Card */
+.auth-card {
+    width: 420px;
+    background: #020617;
+    border: 1px solid #1e293b;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Title */
+.auth-card h2 {
+    margin-bottom: 32px;
+    font-size: 26px;
+    color: #38bdf8;
+}
+
+.auth-card p {
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+/* Form */
+.auth-form label {
+    display: block;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #cbd5f5;
+}
+
+.auth-form input {
+    width: 100%;
+    margin-top: 6px;
+    margin-bottom: 20px;
+    padding: 12px 1px;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    color: #e5e7eb;
+    font-size: 14px;
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+}
+
+/* Button */
+.auth-form button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    background: #38bdf8;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #020617;
+    cursor: pointer;
+}
+
+.auth-form button:hover {
+    background: #0ea5e9;
+}
+
+/* Footer links */
+.auth-footer {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.auth-footer a {
+    color: #38bdf8;
+    text-decoration: none;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+/* Form */
+.auth-form label {
+    display: block;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #cbd5f5;
+}
+
+.auth-form input {
+    width: 100%;
+    margin-top: 6px;
+    margin-bottom: 20px;
+    padding: 12px 1px;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    color: #e5e7eb;
+    font-size: 14px;
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+}
+
+/* Button */
+.auth-form button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    background: #38bdf8;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #020617;
+    cursor: pointer;
+}
+
+.auth-form button:hover {
+    background: #0ea5e9;
+}
+
+/* Footer links */
+.auth-footer {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.auth-footer a {
+    color: #38bdf8;
+    text-decoration: none;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
